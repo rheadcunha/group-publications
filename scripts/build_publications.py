@@ -1,7 +1,6 @@
 import csv
 import html
 import json
-import os
 import re
 import sys
 import time
@@ -18,47 +17,14 @@ JSON_OUTPUT = OUTPUT_DIR / "publications.json"
 HTML_OUTPUT = OUTPUT_DIR / "index.html"
 
 ORCID_API = "https://pub.orcid.org/v3.0"
-TOKEN_URL = "https://orcid.org/oauth/token"
 REQUEST_TIMEOUT = 30
 BATCH_SIZE = 50
 
 
-def get_env(name):
-    value = os.getenv(name)
-    if not value:
-        raise RuntimeError(f"Missing required environment variable: {name}")
-    return value
-
-
-def request_token():
-    response = requests.post(
-        TOKEN_URL,
-        data={
-            "client_id": get_env("ORCID_CLIENT_ID"),
-            "client_secret": get_env("ORCID_CLIENT_SECRET"),
-            "grant_type": "client_credentials",
-            "scope": "/read-public",
-        },
-        headers={"Accept": "application/json"},
-        timeout=REQUEST_TIMEOUT,
-    )
-    response.raise_for_status()
-
-    token = response.json().get("access_token")
-
-    if not token:
-        raise RuntimeError("ORCID did not return an access token.")
-
-    return token
-
-
-def api_get(path, token):
+def api_get(path):
     response = requests.get(
         f"{ORCID_API}{path}",
-        headers={
-            "Accept": "application/json",
-            "Authorization": f"Bearer {token}",
-        },
+        headers={"Accept": "application/json"},
         timeout=REQUEST_TIMEOUT,
     )
 
@@ -94,8 +60,8 @@ def chunked(items, size):
         yield items[start:start + size]
 
 
-def get_put_codes(orcid, token):
-    data = api_get(f"/{orcid}/works", token)
+def get_put_codes(orcid):
+    data = api_get(f"/{orcid}/works")
 
     if not data:
         return []
@@ -111,11 +77,11 @@ def get_put_codes(orcid, token):
     return sorted(set(put_codes))
 
 
-def get_full_works(orcid, put_codes, token):
+def get_full_works(orcid, put_codes):
     works = []
 
     for batch in chunked(put_codes, BATCH_SIZE):
-        data = api_get(f"/{orcid}/works/{','.join(batch)}", token)
+        data = api_get(f"/{orcid}/works/{','.join(batch)}")
 
         if not data:
             continue
@@ -335,7 +301,6 @@ def main():
     if not researchers:
         raise RuntimeError("No valid ORCID records were found in data/researchers.csv.")
 
-    token = request_token()
     publications = {}
     failures = []
 
@@ -343,8 +308,8 @@ def main():
         print(f"[{number}/{len(researchers)}] {researcher['name']}")
 
         try:
-            put_codes = get_put_codes(researcher["orcid"], token)
-            works = get_full_works(researcher["orcid"], put_codes, token)
+            put_codes = get_put_codes(researcher["orcid"])
+            works = get_full_works(researcher["orcid"], put_codes)
 
             for work in works:
                 publication = convert_work(work, researcher)
