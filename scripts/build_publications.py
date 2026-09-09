@@ -13,12 +13,12 @@ import requests
 ROOT = Path(__file__).resolve().parents[1]
 ROSTER_PATH = ROOT / "data" / "researchers.csv"
 OUTPUT_DIR = ROOT / "docs"
-JSON_OUTPUT = OUTPUT_DIR / "publications.json"
+JSON_OUTPUT = OUTPUT_DIR / "publications-by-researcher.json"
 HTML_OUTPUT = OUTPUT_DIR / "index.html"
 
 ORCID_API = "https://pub.orcid.org/v3.0"
 REQUEST_TIMEOUT = 30
-BATCH_SIZE = 50
+REQUEST_PAUSE_SECONDS = 0.2
 
 
 def api_get(path):
@@ -40,8 +40,8 @@ def read_researchers():
 
     with ROSTER_PATH.open(newline="", encoding="utf-8") as file:
         for row in csv.DictReader(file):
-            name = row["name"].strip()
-            orcid = row["orcid"].strip().upper()
+            name = (row.get("name") or "").strip()
+            orcid = (row.get("orcid") or "").strip().upper()
 
             if not name or not orcid:
                 continue
@@ -53,43 +53,6 @@ def read_researchers():
             researchers.append({"name": name, "orcid": orcid})
 
     return researchers
-
-
-def chunked(items, size):
-    for start in range(0, len(items), size):
-        yield items[start:start + size]
-
-
-def get_put_codes(orcid):
-    data = api_get(f"/{orcid}/works")
-
-    if not data:
-        return []
-
-    put_codes = []
-
-    for group in data.get("group", []):
-        for summary in group.get("work-summary", []):
-            put_code = summary.get("put-code")
-            if put_code is not None:
-                put_codes.append(str(put_code))
-
-    return sorted(set(put_codes))
-
-
-def get_full_works(orcid, put_codes):
-    works = []
-
-    for batch in chunked(put_codes, BATCH_SIZE):
-        data = api_get(f"/{orcid}/works/{','.join(batch)}")
-
-        if not data:
-            continue
-
-        works.extend(item for item in data.get("bulk", []) if item)
-        time.sleep(0.15)
-
-    return works
 
 
 def text_value(data, *keys):
@@ -129,8 +92,11 @@ def normalize_doi(value):
 
 def get_doi(work):
     for external_id in work.get("external-ids", {}).get("external-id", []):
-        if external_id.get("external-id-type", "").lower() == "doi":
+        external_id_type = (external_id.get("external-id-type") or "").lower()
+
+        if external_id_type == "doi":
             doi = normalize_doi(external_id.get("external-id-value"))
+
             if doi:
                 return doi
 
@@ -142,25 +108,53 @@ def get_authors(work):
 
     for contributor in work.get("contributors", {}).get("contributor", []):
         name = text_value(contributor, "credit-name", "value")
+
         if name:
             authors.append(name)
 
     return authors
 
 
-def normalize_title(title):
-    return re.sub(r"[^a-z0-9]", "", title.lower())
-
-
-def convert_work(work, researcher):
+def get_title(work):
     title = text_value(work, "title", "title", "value")
     subtitle = text_value(work, "title", "subtitle", "value")
 
     if subtitle:
-        title = f"{title}: {subtitle}"
+        return f"{title}: {subtitle}"
 
+    return title or "Untitled work"
+
+
+def format_work_type(work_type):
+    return (work_type or "Other").replace("_", " ").title()
+
+
+def get_put_codes(orcid):
+    data = api_get(f"/{orcid}/works")
+
+    if not data:
+        return []
+
+    put_codes = []
+
+    for group in data.get("group", []):
+        for summary in group.get("work-summary", []):
+            put_code = summary.get("put-code")
+
+            if put_code is not None:
+                put_codes.append(str(put_code))
+
+    return sorted(set(put_codes))
+
+
+def get_detailed_work(orcid, put_code):
+    return api_get(f"/{orcid}/work/{put_code}")
+
+
+def make_publication(work):
     return {
-        "title": title or "Untitled work",
+        "put_code": str(work.get("put-code", "")),
+        "title": get_title(work),
         "year": publication_year(work),
         "doi": get_doi(work),
         "journal": text_value(work, "journal-title", "value"),
@@ -169,40 +163,8 @@ def convert_work(work, researcher):
         "pages": text_value(work, "journal-issue", "page-range"),
         "type": work.get("type", ""),
         "authors": get_authors(work),
-        "group_members": [researcher["name"]],
-        "source_orcids": [researcher["orcid"]],
+        "url": text_value(work, "url", "value"),
     }
-
-
-def duplicate_key(publication):
-    if publication["doi"]:
-        return f"doi:{publication['doi']}"
-
-    return (
-        f"title:{normalize_title(publication['title'])}"
-        f"|year:{publication['year']}"
-    )
-
-
-def merge_work(existing, incoming):
-    existing["group_members"] = sorted(
-        set(existing["group_members"]) | set(incoming["group_members"])
-    )
-    existing["source_orcids"] = sorted(
-        set(existing["source_orcids"]) | set(incoming["source_orcids"])
-    )
-
-    for field in ["title", "journal", "volume", "issue", "pages", "type"]:
-        if not existing.get(field) and incoming.get(field):
-            existing[field] = incoming[field]
-
-    if not existing["authors"] and incoming["authors"]:
-        existing["authors"] = incoming["authors"]
-
-    if not existing["doi"] and incoming["doi"]:
-        existing["doi"] = incoming["doi"]
-
-    existing["year"] = max(existing["year"], incoming["year"])
 
 
 def citation_text(publication):
@@ -233,57 +195,101 @@ def citation_text(publication):
     return " ".join(parts)
 
 
-def render_html(publications, generated_at):
-    by_year = defaultdict(list)
+def render_publication(publication):
+    citation = html.escape(citation_text(publication))
+    type_label = html.escape(format_work_type(publication["type"]))
+    links = [f'<span class="type">{type_label}</span>']
 
-    for publication in publications:
-        by_year[publication["year"]].append(publication)
+    if publication["doi"]:
+        doi = html.escape(publication["doi"])
+        links.append(
+            f'<a href="https://doi.org/{doi}" target="_blank" '
+            f'rel="noopener noreferrer">DOI</a>'
+        )
+    elif publication["url"]:
+        url = html.escape(publication["url"], quote=True)
+        links.append(
+            f'<a href="{url}" target="_blank" rel="noopener noreferrer">'
+            f'View record</a>'
+        )
 
+    return (
+        f"      <li>{citation}"
+        f'<div class="publication-meta">{" · ".join(links)}</div>'
+        f"      </li>"
+    )
+
+
+def render_html(researchers, generated_at):
     lines = [
         "<!doctype html>",
         '<html lang="en">',
         "<head>",
         '  <meta charset="utf-8">',
         '  <meta name="viewport" content="width=device-width, initial-scale=1">',
-        "  <title>Group Publications</title>",
+        "  <title>Publications by Researcher</title>",
         "  <style>",
-        "    body { font-family: Arial, sans-serif; color: #1f2937; line-height: 1.6; max-width: 980px; margin: 2rem auto; padding: 0 1rem; }",
-        "    h1 { margin-bottom: 0.25rem; }",
-        "    h2 { margin-top: 2.25rem; border-bottom: 1px solid #d1d5db; padding-bottom: 0.35rem; }",
+        "    :root { color-scheme: light; }",
+        "    body { font-family: Arial, Helvetica, sans-serif; color: #1f2937; line-height: 1.6; max-width: 1080px; margin: 2rem auto; padding: 0 1rem 4rem; }",
+        "    h1 { margin-bottom: 0.2rem; }",
+        "    h2 { margin: 2.8rem 0 0.25rem; padding-top: 0.4rem; border-top: 2px solid #0f4c81; }",
+        "    h3 { margin: 1.6rem 0 0.4rem; border-bottom: 1px solid #d1d5db; padding-bottom: 0.25rem; }",
+        "    ol { padding-left: 1.5rem; }",
         "    li { margin-bottom: 1rem; }",
-        "    .meta, .members { color: #4b5563; font-size: 0.9rem; }",
-        "    a { color: #0757c8; }",
+        "    .meta, .orcid, .publication-meta, .none { color: #4b5563; font-size: 0.92rem; }",
+        "    .orcid a { color: #0757c8; }",
+        "    .publication-meta { margin-top: 0.2rem; }",
+        "    .publication-meta a { color: #0757c8; }",
+        "    .type { display: inline-block; background: #e8f0fe; color: #174ea6; border-radius: 999px; padding: 0.05rem 0.5rem; }",
+        "    .count { color: #4b5563; font-weight: normal; font-size: 1rem; }",
         "  </style>",
         "</head>",
         "<body>",
-        "  <h1>Group Publications</h1>",
-        f'  <p class="meta">Compiled from public ORCID records. Last updated: {html.escape(generated_at)}.</p>',
+        "  <h1>Publications by Researcher</h1>",
+        '  <p class="meta">Publicly visible ORCID works, organized by individual researcher. Last updated: '
+        f"{html.escape(generated_at)}.</p>",
     ]
 
-    for year in sorted(by_year, reverse=True):
-        heading = str(year) if year else "Year unavailable"
-        lines.append(f"  <h2>{html.escape(heading)}</h2>")
-        lines.append("  <ol>")
+    for researcher in researchers:
+        name = html.escape(researcher["name"])
+        orcid = html.escape(researcher["orcid"])
+        works = researcher["publications"]
 
-        for publication in by_year[year]:
-            citation = html.escape(citation_text(publication))
-            members = html.escape(", ".join(publication["group_members"]))
-            doi = publication["doi"]
+        lines.append(f'  <section id="orcid-{orcid}">')
+        lines.append(
+            f"    <h2>{name} "
+            f'<span class="count">({len(works)} public work{"s" if len(works) != 1 else ""})</span>'
+            f"</h2>"
+        )
+        lines.append(
+            f'    <p class="orcid">ORCID: '
+            f'<a href="https://orcid.org/{orcid}" target="_blank" '
+            f'rel="noopener noreferrer">{orcid}</a></p>'
+        )
 
-            if doi:
-                doi_link = (
-                    f' <a href="https://doi.org/{html.escape(doi)}" '
-                    f'target="_blank" rel="noopener noreferrer">View publication</a>'
-                )
-            else:
-                doi_link = ""
-
+        if not works:
             lines.append(
-                f'    <li>{citation}{doi_link}'
-                f'<div class="members">Group member(s): {members}</div></li>'
+                '    <p class="none">No publicly visible ORCID works were retrieved for this record.</p>'
             )
+            lines.append("  </section>")
+            continue
 
-        lines.append("  </ol>")
+        by_year = defaultdict(list)
+
+        for publication in works:
+            by_year[publication["year"]].append(publication)
+
+        for year in sorted(by_year, reverse=True):
+            year_heading = str(year) if year else "Year unavailable"
+            lines.append(f"    <h3>{html.escape(year_heading)}</h3>")
+            lines.append("    <ol>")
+
+            for publication in by_year[year]:
+                lines.append(render_publication(publication))
+
+            lines.append("    </ol>")
+
+        lines.append("  </section>")
 
     lines.extend([
         "</body>",
@@ -296,72 +302,88 @@ def render_html(publications, generated_at):
 def main():
     OUTPUT_DIR.mkdir(exist_ok=True)
 
-    researchers = read_researchers()
+    roster = read_researchers()
 
-    if not researchers:
-        raise RuntimeError("No valid ORCID records were found in data/researchers.csv.")
+    if not roster:
+        raise RuntimeError("No valid ORCID records found in data/researchers.csv.")
 
-    publications = {}
+    researchers_output = []
     failures = []
 
-    for number, researcher in enumerate(researchers, start=1):
-        print(f"[{number}/{len(researchers)}] {researcher['name']}")
+    for number, researcher in enumerate(roster, start=1):
+        name = researcher["name"]
+        orcid = researcher["orcid"]
+
+        print(f"[{number}/{len(roster)}] Retrieving public works for {name} ({orcid})")
+
+        publications = []
 
         try:
-            put_codes = get_put_codes(researcher["orcid"])
-            works = get_full_works(researcher["orcid"], put_codes)
+            put_codes = get_put_codes(orcid)
 
-            for work in works:
-                publication = convert_work(work, researcher)
-                key = duplicate_key(publication)
+            for put_code in put_codes:
+                work = get_detailed_work(orcid, put_code)
 
-                if key in publications:
-                    merge_work(publications[key], publication)
-                else:
-                    publications[key] = publication
+                if work:
+                    publications.append(make_publication(work))
+
+                time.sleep(REQUEST_PAUSE_SECONDS)
 
         except requests.HTTPError as error:
             failures.append({
-                "name": researcher["name"],
-                "orcid": researcher["orcid"],
+                "name": name,
+                "orcid": orcid,
                 "error": str(error),
             })
-            print(f"Warning: {error}")
+            print(f"Warning for {name}: {error}")
 
-        time.sleep(0.15)
+        publications.sort(
+            key=lambda publication: (
+                publication["year"],
+                publication["title"].lower(),
+            ),
+            reverse=True,
+        )
 
-    ordered_publications = sorted(
-        publications.values(),
-        key=lambda publication: (
-            publication["year"],
-            publication["title"].lower(),
-        ),
-        reverse=True,
-    )
+        researchers_output.append({
+            "name": name,
+            "orcid": orcid,
+            "publication_count": len(publications),
+            "publications": publications,
+        })
+
+        time.sleep(REQUEST_PAUSE_SECONDS)
 
     generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
-    json_output = {
+    output = {
         "generated_at": generated_at,
-        "researchers_processed": len(researchers),
-        "publication_count": len(ordered_publications),
+        "researchers_processed": len(researchers_output),
         "failures": failures,
-        "publications": ordered_publications,
+        "researchers": researchers_output,
     }
 
     JSON_OUTPUT.write_text(
-        json.dumps(json_output, indent=2, ensure_ascii=False),
+        json.dumps(output, indent=2, ensure_ascii=False),
         encoding="utf-8",
     )
 
     HTML_OUTPUT.write_text(
-        render_html(ordered_publications, generated_at),
+        render_html(researchers_output, generated_at),
         encoding="utf-8",
+    )
+
+    total_publications = sum(
+        researcher["publication_count"] for researcher in researchers_output
     )
 
     print(f"Created {JSON_OUTPUT}")
     print(f"Created {HTML_OUTPUT}")
-    print(f"Unique publications: {len(ordered_publications)}")
+    print(f"Researchers processed: {len(researchers_output)}")
+    print(f"Public works retrieved: {total_publications}")
+
+    if failures:
+        print(f"Records with errors: {len(failures)}")
 
 
 if __name__ == "__main__":
