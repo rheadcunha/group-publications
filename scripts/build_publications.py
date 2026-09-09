@@ -91,7 +91,10 @@ def normalize_doi(value):
 
 
 def get_doi(work):
-    for external_id in work.get("external-ids", {}).get("external-id", []):
+    external_ids = (work.get("external-ids") or {}).get("external-id") or []
+
+    for external_id in external_ids:
+        external_id = external_id or {}
         external_id_type = (external_id.get("external-id-type") or "").lower()
 
         if external_id_type == "doi":
@@ -104,9 +107,11 @@ def get_doi(work):
 
 
 def get_authors(work):
+    contributors = (work.get("contributors") or {}).get("contributor") or []
     authors = []
 
-    for contributor in work.get("contributors", {}).get("contributor", []):
+    for contributor in contributors:
+        contributor = contributor or {}
         name = text_value(contributor, "credit-name", "value")
 
         if name:
@@ -137,8 +142,11 @@ def get_put_codes(orcid):
 
     put_codes = []
 
-    for group in data.get("group", []):
-        for summary in group.get("work-summary", []):
+    for group in data.get("group") or []:
+        group = group or {}
+
+        for summary in group.get("work-summary") or []:
+            summary = summary or {}
             put_code = summary.get("put-code")
 
             if put_code is not None:
@@ -148,8 +156,11 @@ def get_put_codes(orcid):
 
 
 def get_detailed_work(orcid, put_code):
-    return api_get(f"/{orcid}/work/{put_code}")
-
+    try:
+        return api_get(f"/{orcid}/work/{put_code}")
+    except requests.HTTPError as error:
+        print(f"  Skipping work {put_code}: {error}")
+        return None
 
 def make_publication(work):
     return {
