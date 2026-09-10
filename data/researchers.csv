@@ -1,28 +1,32 @@
-name,orcid
-Alick Sixpence,0009-0006-1602-528X
-Molly Hoffman,0009-0003-2202-2585
-Sam Gebeh,0009-0001-1591-9218
-Sharon Casey,0000-0003-4972-0407
-Sophie Selbe,0009-0008-3538-1073
-Suzanne McLone,0000-0003-4383-6943
-Keith Gray,0000-0003-1945-3504
-Lauren Linde,0000-0002-3843-7430
-Sarah Weber,0000-0001-5828-8500
-Yifei Shan,0009-0003-4403-3031
-Yuan Zhang,0000-0003-3049-9482
-Leidys Guttierez Martinez,0000-0003-0593-493X
-David Kapaon,0000-0003-0362-8146
-Rachel Slimovitch,0009-0004-8461-9114
-Alianna Higgins,0009-0001-9515-0639
-Josue Estrada,0000-0001-5199-2933
-Chen Sheng,0000-0002-0192-3830
-Kaylin Vrkljan,0009-0000-8645-6161
-Michelle Flesaker,0000-0003-3066-4505
-Azuna Sawada,0009-0005-6411-4546
-Yusi Chen,0000-0001-6968-4664
-Gwen Aubrac,0009-0000-5659-8564
-Hannah Hecht,0000-0003-0008-7030
-Daniela Rochez,0009-0003-1035-040X
-Kanako Fuyama,0000-0003-2171-1381
-Muxi Zheng,0009-0000-2692-8470
-Evelyn De Lima,0000-0003-4236-8295
+name,orcid,pubmed_query
+Alick Sixpence,0009-0006-1602-528X,"""Sixpence A""[au] AND ""Boston University""[ad]"
+Molly Hoffman,0009-0003-2202-2585,"""Hoffman M""[au] AND ""Boston University""[ad]"
+Sam Gebeh,0009-0001-1591-9218,"""Gebeh S""[au] AND ""Boston University""[ad]"
+Sharon Casey,0000-0003-4972-0407,"""Casey S""[au] AND ""Boston University""[ad]"
+Sophie Selbe,0009-0008-3538-1073,"""Selbe S""[au] AND ""Boston University""[ad]"
+Suzanne McLone,0000-0003-4383-6943,"""McLone S""[au] AND ""Boston University""[ad]"
+Keith Gray,0000-0003-1945-3504,"""Gray K""[au] AND ""Boston University""[ad]"
+Lauren Linde,0000-0002-3843-7430,"""Linde L""[au] AND ""Boston University""[ad]"
+Sarah Weber,0000-0001-5828-8500,"""Weber S""[au] AND ""Boston University""[ad]"
+Yifei Shan,0009-0003-4403-3031,"""Shan Y""[au] AND ""Boston University""[ad]"
+Yuan Zhang,0000-0003-3049-9482,"""Zhang Y""[au] AND ""Boston University""[ad]"
+Leidys Guttierez Martinez,0000-0003-0593-493X,"""Guttierez Martinez L""[au] AND ""Boston University""[ad]"
+David Kapaon,0000-0003-0362-8146,"""Kapaon D""[au] AND ""Boston University""[ad]"
+Rachel Slimovitch,0009-0004-8461-9114,"""Slimovitch R""[au] AND ""Boston University""[ad]"
+Alianna Higgins,0009-0001-9515-0639,"""Higgins A""[au] AND ""Boston University""[ad]"
+Josue Estrada,0000-0001-5199-2933,"""Estrada J""[au] AND ""Boston University""[ad]"
+Chen Sheng,0000-0002-0192-3830,"""Sheng C""[au] AND ""Boston University""[ad]"
+Kaylin Vrkljan,0009-0000-8645-6161,"""Vrkljan K""[au] AND ""Boston University""[ad]"
+Michelle Flesaker,0000-0003-3066-4505,"""Flesaker M""[au] AND ""Boston University""[ad]"
+Azuna Sawada,0009-0005-6411-4546,"""Sawada A""[au] AND ""Boston University""[ad]"
+Yusi Chen,0000-0001-6968-4664,"""Chen Y""[au] AND ""Boston University""[ad]"
+Gwen Aubrac,0009-0000-5659-8564,"""Aubrac G""[au] AND ""Boston University""[ad]"
+Hannah Hecht,0000-0003-0008-7030,"""Hecht H""[au] AND ""Boston University""[ad]"
+Daniela Rochez,0009-0003-1035-040X,"""Rochez D""[au] AND ""Boston University""[ad]"
+Kanako Fuyama,0000-0003-2171-1381,"""Fuyama K""[au] AND ""Boston University""[ad]"
+Muxi Zheng,0009-0000-2692-8470,"""Zheng M""[au] AND ""Boston University""[ad]"
+Evelyn De Lima,0000-0003-4236-8295,"""De Lima E""[au] AND ""Boston University""[ad]"
+Mabeline Velez,,"""Velez M""[au] AND ""Boston University""[ad]"
+Tianyu Liu,,"""Liu T""[au] AND ""Boston University""[ad]"
+Virginia Cafferky,,"""Cafferky V""[au] AND ""Boston University""[ad]"
+Hannah Thomas,,"""Thomas H""[au] AND ""Boston University""[ad]"
