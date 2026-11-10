@@ -7,6 +7,7 @@ import sys
 import time
 from collections import defaultdict
 from datetime import datetime, timezone
+from itertools import combinations
 from pathlib import Path
 
 import requests
@@ -17,6 +18,8 @@ ROSTER_PATH = ROOT / "data" / "researchers.csv"
 OUTPUT_DIR = ROOT / "docs"
 JSON_OUTPUT = OUTPUT_DIR / "publications-by-researcher.json"
 HTML_OUTPUT = OUTPUT_DIR / "index.html"
+
+GROUP_NAME = "TIME-AD"
 
 ORCID_API = "https://pub.orcid.org/v3.0"
 REQUEST_TIMEOUT = 30
@@ -378,6 +381,186 @@ def citation_text(publication):
     return " ".join(parts)
 
 
+def find_collaborations(researchers):
+    """Find works that appear in the records of two or more roster members."""
+    roster_order = {r["name"]: i for i, r in enumerate(researchers)}
+    by_key = {}
+
+    for researcher in researchers:
+        works = researcher["pubmed_publications"] + researcher["other_orcid_works"]
+
+        for publication in works:
+            key = publication_key(publication)
+
+            # Skip records too thin to match safely (no DOI and a very short title).
+            if not publication["doi"] and len(key) < 25:
+                continue
+
+            entry = by_key.setdefault(
+                key,
+                {"publication": publication, "members": {}},
+            )
+            entry["members"].setdefault(
+                researcher["name"],
+                publication["match_type"],
+            )
+
+            if (
+                entry["publication"]["source"] != "PubMed"
+                and publication["source"] == "PubMed"
+            ):
+                entry["publication"] = publication
+
+    collaborations = []
+    pair_counts = defaultdict(int)
+    coauthor_counts = defaultdict(lambda: defaultdict(int))
+
+    for entry in by_key.values():
+        if len(entry["members"]) < 2:
+            continue
+
+        members = sorted(entry["members"], key=roster_order.get)
+        publication = {
+            k: v for k, v in entry["publication"].items() if k != "match_type"
+        }
+        publication["members"] = [
+            {"name": name, "match_type": entry["members"][name]}
+            for name in members
+        ]
+        collaborations.append(publication)
+
+        for first, second in combinations(members, 2):
+            pair_counts[(first, second)] += 1
+            coauthor_counts[first][second] += 1
+            coauthor_counts[second][first] += 1
+
+    collaborations.sort(
+        key=lambda publication: (
+            publication["year"],
+            len(publication["members"]),
+            publication["title"].lower(),
+        ),
+        reverse=True,
+    )
+
+    pairs = [
+        {"researchers": [first, second], "shared_publications": count}
+        for (first, second), count in sorted(
+            pair_counts.items(),
+            key=lambda item: (-item[1], roster_order[item[0][0]], roster_order[item[0][1]]),
+        )
+    ]
+
+    coauthors = {
+        name: [
+            {"name": other, "shared_publications": count}
+            for other, count in sorted(
+                counts.items(),
+                key=lambda item: (-item[1], roster_order[item[0]]),
+            )
+        ]
+        for name, counts in coauthor_counts.items()
+    }
+
+    return collaborations, pairs, coauthors
+
+
+def member_link(name, slugs):
+    return (
+        f'<a class="member" href="#researcher-{html.escape(slugs[name])}">'
+        f"{html.escape(name)}</a>"
+    )
+
+
+def render_collaborations(collaborations, pairs, slugs):
+    group = html.escape(GROUP_NAME)
+    collaborating_people = {
+        name for pair in pairs for name in pair["researchers"]
+    }
+
+    lines = [
+        '  <section id="collaborations">',
+        f"    <h2>Collaborations within {group} "
+        f'<span class="count">({len(collaborations)} shared '
+        f'publication{"s" if len(collaborations) != 1 else ""})</span></h2>',
+        f'    <p class="meta">Publications that appear in the records of two or more {group} members. '
+        f"{len(collaborating_people)} members have at least one shared publication, across "
+        f"{len(pairs)} collaborating pairs. Most records are matched by author name and institution, "
+        "so check entries before reporting them.</p>",
+    ]
+
+    if not collaborations:
+        lines.append('    <p class="none">No shared publications were found.</p>')
+        lines.append("  </section>")
+        return lines
+
+    lines.append(
+        f"    <details><summary>Collaborating pairs ({len(pairs)})</summary>"
+    )
+    lines.append('    <div class="table-wrap"><table>')
+    lines.append(
+        "      <thead><tr><th>Member</th><th>Member</th>"
+        "<th>Shared publications</th></tr></thead><tbody>"
+    )
+
+    for pair in pairs:
+        first, second = pair["researchers"]
+        lines.append(
+            f"      <tr><td>{member_link(first, slugs)}</td>"
+            f"<td>{member_link(second, slugs)}</td>"
+            f'<td class="num">{pair["shared_publications"]}</td></tr>'
+        )
+
+    lines.append("    </tbody></table></div></details>")
+
+    by_year = defaultdict(list)
+
+    for publication in collaborations:
+        by_year[publication["year"]].append(publication)
+
+    for year in sorted(by_year, reverse=True):
+        label = str(year) if year else "Year unavailable"
+        lines.append(
+            f"    <h4>{html.escape(label)} "
+            f'<span class="count">({len(by_year[year])})</span></h4>'
+        )
+        lines.append("    <ol>")
+
+        for publication in by_year[year]:
+            citation = html.escape(citation_text(publication))
+            members = ", ".join(
+                member_link(member["name"], slugs)
+                for member in publication["members"]
+            )
+            links = []
+
+            if publication["pmid"]:
+                pmid = html.escape(publication["pmid"])
+                links.append(
+                    f'<a href="https://pubmed.ncbi.nlm.nih.gov/{pmid}/" '
+                    f'target="_blank" rel="noopener noreferrer">PubMed</a>'
+                )
+
+            if publication["doi"]:
+                doi = html.escape(publication["doi"])
+                links.append(
+                    f'<a href="https://doi.org/{doi}" '
+                    f'target="_blank" rel="noopener noreferrer">DOI</a>'
+                )
+
+            link_text = f" · {' · '.join(links)}" if links else ""
+            lines.append(
+                f"      <li>{citation}"
+                f'<div class="publication-meta">{group} authors: {members}{link_text}</div>'
+                f"</li>"
+            )
+
+        lines.append("    </ol>")
+
+    lines.append("  </section>")
+    return lines
+
+
 def render_publication(publication):
     citation = html.escape(citation_text(publication))
     source = html.escape(publication["source"])
@@ -440,7 +623,9 @@ def render_year_sections(publications):
     return lines
 
 
-def render_html(researchers, generated_at):
+def render_html(researchers, generated_at, collaborations, pairs, coauthors):
+    slugs = {r["name"]: r["slug"] for r in researchers}
+
     lines = [
         "<!doctype html>",
         '<html lang="en">',
@@ -467,6 +652,17 @@ def render_html(researchers, generated_at):
         "    .match { background: #fff3cd; color: #6e4d00; }",
         "    .type { background: #edf7ed; color: #256029; }",
         "    .count { color: #4b5563; font-weight: normal; font-size: 1rem; }",
+        "    a.member { display: inline-block; background: #f3e8ff; color: #5b21b6; border-radius: 999px; padding: 0 0.45rem; text-decoration: none; margin: 0.1rem 0; }",
+        "    a.member:hover { text-decoration: underline; }",
+        "    details { margin: 1rem 0; }",
+        "    summary { cursor: pointer; font-weight: bold; color: #123b62; }",
+        "    .table-wrap { overflow-x: auto; max-height: 28rem; overflow-y: auto; margin-top: 0.5rem; }",
+        "    table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }",
+        "    th, td { text-align: left; padding: 0.3rem 0.6rem; border-bottom: 1px solid #e5e7eb; }",
+        "    th { position: sticky; top: 0; background: #f9fafb; }",
+        "    td.num { text-align: right; }",
+        "    .coauthors { font-size: 0.92rem; color: #4b5563; }",
+        "    .jump { font-size: 1.05rem; font-weight: bold; }",
         "  </style>",
         "</head>",
         "<body>",
@@ -475,6 +671,8 @@ def render_html(researchers, generated_at):
         "author-and-affiliation results should be reviewed, especially for common names. Other public ORCID works appear below. "
         f"Last updated: {html.escape(generated_at)}.</p>",
         "  <nav>",
+        f'    <p class="jump"><a href="#collaborations">Collaborations within {html.escape(GROUP_NAME)} '
+        f"({len(collaborations)})</a></p>",
         "    <ul>",
     ]
 
@@ -486,6 +684,7 @@ def render_html(researchers, generated_at):
         )
 
     lines.extend(["    </ul>", "  </nav>"])
+    lines.extend(render_collaborations(collaborations, pairs, slugs))
 
     for researcher in researchers:
         name = html.escape(researcher["name"])
@@ -514,6 +713,17 @@ def render_html(researchers, generated_at):
         else:
             lines.append(
                 '    <p class="orcid">No ORCID iD currently listed; PubMed author-and-affiliation search only.</p>'
+            )
+
+        researcher_coauthors = coauthors.get(researcher["name"], [])
+
+        if researcher_coauthors:
+            names = ", ".join(
+                f'{member_link(c["name"], slugs)} ({c["shared_publications"]})'
+                for c in researcher_coauthors
+            )
+            lines.append(
+                f'    <p class="coauthors">{html.escape(GROUP_NAME)} co-authors: {names}</p>'
             )
 
         lines.append(
@@ -687,10 +897,19 @@ def main():
 
     generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
+    collaborations, pairs, coauthors = find_collaborations(output_researchers)
+
+    for researcher in output_researchers:
+        researcher["group_coauthors"] = coauthors.get(researcher["name"], [])
+
     output = {
         "generated_at": generated_at,
+        "group_name": GROUP_NAME,
         "researchers_processed": len(output_researchers),
         "failures": failures,
+        "collaboration_count": len(collaborations),
+        "collaborating_pairs": pairs,
+        "collaborations": collaborations,
         "researchers": output_researchers,
     }
 
@@ -700,7 +919,7 @@ def main():
     )
 
     HTML_OUTPUT.write_text(
-        render_html(output_researchers, generated_at),
+        render_html(output_researchers, generated_at, collaborations, pairs, coauthors),
         encoding="utf-8",
     )
 
@@ -712,6 +931,7 @@ def main():
     print(f"Researchers processed: {len(output_researchers)}")
     print(f"PubMed publications: {total_pubmed}")
     print(f"Other ORCID works: {total_orcid_other}")
+    print(f"{GROUP_NAME} shared publications: {len(collaborations)}")
 
     if failures:
         print(f"Warnings recorded: {len(failures)}")
