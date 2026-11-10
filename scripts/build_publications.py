@@ -1,6 +1,7 @@
 import csv
 import html
 import json
+import os
 import re
 import sys
 import time
@@ -19,11 +20,20 @@ HTML_OUTPUT = OUTPUT_DIR / "index.html"
 
 ORCID_API = "https://pub.orcid.org/v3.0"
 REQUEST_TIMEOUT = 30
-REQUEST_PAUSE_SECONDS = 0.4
-PUBMED_MAX_RESULTS_PER_QUERY = 500
+PUBMED_MAX_RESULTS_PER_QUERY = 5000
+PUBMED_SUMMARY_BATCH_SIZE = 200
 
 Entrez.email = "rheajd@bu.edu"
 Entrez.tool = "group_publications_orcid_pubmed"
+
+# Optional: an NCBI API key raises the PubMed rate limit from 3 to 10 requests/second.
+NCBI_API_KEY = os.environ.get("NCBI_API_KEY", "").strip()
+
+if NCBI_API_KEY:
+    Entrez.api_key = NCBI_API_KEY
+    REQUEST_PAUSE_SECONDS = 0.12
+else:
+    REQUEST_PAUSE_SECONDS = 0.4
 
 
 def api_get(path):
@@ -47,7 +57,9 @@ def read_researchers():
         for row in csv.DictReader(file):
             name = (row.get("name") or "").strip()
             orcid = (row.get("orcid") or "").strip().upper()
+            orcid = re.sub(r"^HTTPS?://ORCID\.ORG/", "", orcid)
             pubmed_query = (row.get("pubmed_query") or "").strip()
+            affiliation = (row.get("affiliation") or "").strip()
 
             if not name:
                 continue
@@ -67,6 +79,7 @@ def read_researchers():
                 "name": name,
                 "orcid": orcid,
                 "pubmed_query": pubmed_query,
+                "affiliation": affiliation,
             })
 
     return researchers
@@ -215,36 +228,47 @@ def pubmed_search(query):
         handle.close()
 
     time.sleep(REQUEST_PAUSE_SECONDS)
+
+    total = int(result.get("Count", 0))
+
+    if total > PUBMED_MAX_RESULTS_PER_QUERY:
+        print(
+            f"  Note: query matched {total} records; "
+            f"only the newest {PUBMED_MAX_RESULTS_PER_QUERY} were kept."
+        )
+
     return result.get("IdList", [])
 
 
 def pubmed_fetch(pmids):
-    if not pmids:
-        return []
+    records = []
 
-    handle = Entrez.esummary(
-        db="pubmed",
-        id=",".join(pmids),
-        retmode="xml",
-    )
+    for start in range(0, len(pmids), PUBMED_SUMMARY_BATCH_SIZE):
+        batch = pmids[start:start + PUBMED_SUMMARY_BATCH_SIZE]
+        handle = Entrez.esummary(
+            db="pubmed",
+            id=",".join(batch),
+            retmode="xml",
+        )
 
-    try:
-        result = Entrez.read(handle)
-    finally:
-        handle.close()
+        try:
+            records.extend(Entrez.read(handle))
+        finally:
+            handle.close()
 
-    time.sleep(REQUEST_PAUSE_SECONDS)
-    return result
+        time.sleep(REQUEST_PAUSE_SECONDS)
+
+    return records
 
 
 def pubmed_authors(author_list):
     authors = []
 
     for author in author_list or []:
-        if not isinstance(author, dict):
-            continue
-
-        author_name = (author.get("Name") or "").strip()
+        if isinstance(author, dict):
+            author_name = (author.get("Name") or "").strip()
+        else:
+            author_name = str(author).strip()
 
         if author_name:
             authors.append(author_name)
@@ -266,12 +290,26 @@ def pubmed_year(record):
 
 
 def pubmed_doi(record):
+    doi = record.get("DOI") or ""
+
+    if doi:
+        return normalize_doi(doi)
+
     article_ids = record.get("ArticleIds") or {}
 
     if isinstance(article_ids, dict):
         return normalize_doi(article_ids.get("doi") or "")
 
     return ""
+
+
+def pubmed_type(record):
+    pub_types = record.get("PubTypeList") or record.get("PubType") or ""
+
+    if isinstance(pub_types, (list, tuple)):
+        return ", ".join(str(item) for item in pub_types if item)
+
+    return str(pub_types).strip()
 
 
 def make_pubmed_publication(record, match_type):
@@ -293,8 +331,8 @@ def make_pubmed_publication(record, match_type):
         "volume": (record.get("Volume") or "").strip(),
         "issue": (record.get("Issue") or "").strip(),
         "pages": (record.get("Pages") or "").strip(),
-        "type": (record.get("PubType") or "").strip(),
-        "authors": pubmed_authors(record.get("Authors")),
+        "type": pubmed_type(record),
+        "authors": pubmed_authors(record.get("AuthorList")),
         "url": f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/" if pmid else "",
     }
 
@@ -318,7 +356,7 @@ def citation_text(publication):
     if publication["authors"]:
         parts.append(", ".join(publication["authors"]) + ".")
 
-    parts.append(publication["title"] + ".")
+    parts.append(publication["title"].rstrip(".") + ".")
 
     journal_details = publication["journal"]
 
@@ -418,8 +456,11 @@ def render_html(researchers, generated_at):
         "    h4 { margin: 1.25rem 0 0.35rem; border-bottom: 1px solid #d1d5db; padding-bottom: 0.25rem; }",
         "    ol { padding-left: 1.5rem; }",
         "    li { margin-bottom: 1rem; }",
-        "    .meta, .orcid, .publication-meta, .none { color: #4b5563; font-size: 0.92rem; }",
-        "    .orcid a, .publication-meta a { color: #0757c8; }",
+        "    nav ul { list-style: none; padding: 0; columns: 3 14rem; font-size: 0.92rem; }",
+        "    nav li { margin-bottom: 0.15rem; }",
+        "    nav a, .orcid a, .publication-meta a { color: #0757c8; }",
+        "    .meta, .orcid, .affiliation, .publication-meta, .none { color: #4b5563; font-size: 0.92rem; }",
+        "    .affiliation { margin: 0; }",
         "    .publication-meta { margin-top: 0.2rem; }",
         "    .source, .match, .type { display: inline-block; border-radius: 999px; padding: 0.05rem 0.5rem; }",
         "    .source { background: #e8f0fe; color: #174ea6; }",
@@ -431,13 +472,25 @@ def render_html(researchers, generated_at):
         "<body>",
         "  <h1>Publications by Researcher</h1>",
         '  <p class="meta">PubMed records appear first. Results found by an ORCID iD are high-confidence; '
-        "author-and-affiliation results should be reviewed for common names. Other public ORCID works appear below. "
+        "author-and-affiliation results should be reviewed, especially for common names. Other public ORCID works appear below. "
         f"Last updated: {html.escape(generated_at)}.</p>",
+        "  <nav>",
+        "    <ul>",
     ]
+
+    for researcher in researchers:
+        total = researcher["pubmed_publication_count"] + researcher["other_orcid_work_count"]
+        lines.append(
+            f'      <li><a href="#researcher-{html.escape(researcher["slug"])}">'
+            f'{html.escape(researcher["name"])}</a> ({total})</li>'
+        )
+
+    lines.extend(["    </ul>", "  </nav>"])
 
     for researcher in researchers:
         name = html.escape(researcher["name"])
         orcid = html.escape(researcher["orcid"])
+        affiliation = html.escape(researcher["affiliation"])
         pubmed_works = researcher["pubmed_publications"]
         other_orcid_works = researcher["other_orcid_works"]
         total = len(pubmed_works) + len(other_orcid_works)
@@ -448,6 +501,9 @@ def render_html(researchers, generated_at):
             f'<span class="count">({total} work{"s" if total != 1 else ""})</span>'
             f"</h2>"
         )
+
+        if affiliation:
+            lines.append(f'    <p class="affiliation">{affiliation}</p>')
 
         if orcid:
             lines.append(
@@ -513,6 +569,7 @@ def main():
         name = researcher["name"]
         orcid = researcher["orcid"]
         author_query = researcher["pubmed_query"]
+        affiliation = researcher["affiliation"] or "affiliation"
 
         print(f"[{number}/{len(roster)}] Retrieving records for {name}")
 
@@ -541,7 +598,7 @@ def main():
                 for pmid in author_pmids:
                     pmid_match_types.setdefault(
                         pmid,
-                        "Author + Boston University match — review recommended",
+                        f"Author + {affiliation} match — review recommended",
                     )
 
             except Exception as error:
@@ -560,10 +617,7 @@ def main():
 
             for record in pubmed_records:
                 pmid = str(record.get("Id") or "")
-                match_type = pmid_match_types.get(
-                    pmid,
-                    "PubMed match",
-                )
+                match_type = pmid_match_types.get(pmid, "PubMed match")
                 pubmed_works.append(
                     make_pubmed_publication(record, match_type)
                 )
@@ -610,26 +664,18 @@ def main():
                 })
                 print(f"  ORCID warning: {error}")
 
-        pubmed_works.sort(
-            key=lambda publication: (
-                publication["year"],
-                publication["title"].lower(),
-            ),
-            reverse=True,
+        sort_key = lambda publication: (
+            publication["year"],
+            publication["title"].lower(),
         )
-
-        other_orcid_works.sort(
-            key=lambda publication: (
-                publication["year"],
-                publication["title"].lower(),
-            ),
-            reverse=True,
-        )
+        pubmed_works.sort(key=sort_key, reverse=True)
+        other_orcid_works.sort(key=sort_key, reverse=True)
 
         output_researchers.append({
             "name": name,
             "slug": researcher_slug(name),
             "orcid": orcid,
+            "affiliation": researcher["affiliation"],
             "pubmed_query": author_query,
             "pubmed_publication_count": len(pubmed_works),
             "other_orcid_work_count": len(other_orcid_works),
@@ -658,14 +704,8 @@ def main():
         encoding="utf-8",
     )
 
-    total_pubmed = sum(
-        researcher["pubmed_publication_count"]
-        for researcher in output_researchers
-    )
-    total_orcid_other = sum(
-        researcher["other_orcid_work_count"]
-        for researcher in output_researchers
-    )
+    total_pubmed = sum(r["pubmed_publication_count"] for r in output_researchers)
+    total_orcid_other = sum(r["other_orcid_work_count"] for r in output_researchers)
 
     print(f"Created {JSON_OUTPUT}")
     print(f"Created {HTML_OUTPUT}")
