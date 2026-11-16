@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-10 20:06 UTC",
+  "generated_at": "2026-11-16 19:18 UTC",
   "group_name": "TIME-AD",
   "researchers_processed": 84,
   "failures": [],
@@ -3379,7 +3379,7 @@
       "volume": "16",
       "issue": "1",
       "pages": "",
-      "type": "Journal Article",
+      "type": "Journal Article, Research Support, N.I.H., Extramural",
       "authors": [
         "Posis AIB",
         "Chen R",
@@ -31825,7 +31825,7 @@
           "volume": "72",
           "issue": "11",
           "pages": "3346-3359",
-          "type": "Journal Article",
+          "type": "Journal Article, Research Support, N.I.H., Extramural, Research Support, Non-U.S. Gov't",
           "authors": [
             "Iyer AS",
             "Wells RD",
@@ -53052,7 +53052,7 @@
       "orcid": "",
       "affiliation": "UCSF",
       "pubmed_query": "(\"Huang, Chiung-Yu\"[FAU]) AND (\"San Francisco\"[AD] OR \"UCSF\"[AD])",
-      "pubmed_publication_count": 119,
+      "pubmed_publication_count": 120,
       "other_orcid_work_count": 0,
       "pubmed_publications": [
         {
@@ -53142,6 +53142,74 @@
             "Zhang SX"
           ],
           "url": "https://pubmed.ncbi.nlm.nih.gov/42841776/"
+        },
+        {
+          "source": "PubMed",
+          "match_type": "Author + UCSF match — review recommended",
+          "pmid": "43024836",
+          "put_code": "",
+          "title": "Early Treatment Failure in Patients With Relapsed/Refractory Multiple Myeloma Receiving Bispecific T-Cell Engagers: Development and Validation of the CHARGE Prognostic Index.",
+          "year": 2026,
+          "doi": "10.1200/jco-26-01039",
+          "journal": "Journal of clinical oncology : official journal of the American Society of Clinical Oncology",
+          "volume": "",
+          "issue": "",
+          "pages": "JCO2601039",
+          "type": "Journal Article",
+          "authors": [
+            "Zanwar S",
+            "Hansen DK",
+            "Pasvolsky O",
+            "Tan C",
+            "Peres LC",
+            "Goel U",
+            "Popat R",
+            "Afrough A",
+            "Asoori S",
+            "Rana M",
+            "Dave M",
+            "Portuguese A",
+            "Kastritis E",
+            "Davis JA",
+            "Martinez-Lopez J",
+            "Sborov D",
+            "Mihalyova J",
+            "Bal S",
+            "Janakiram M",
+            "Pan D",
+            "Shune L",
+            "Ferreri C",
+            "Biran N",
+            "Herr M",
+            "Grajales-Cruz A",
+            "Khouri J",
+            "Corraes AMS",
+            "Puglianini OC",
+            "Liang EC",
+            "Zolotov E",
+            "Richards T",
+            "Gaballa M",
+            "Fortuna GG",
+            "Julian K",
+            "Green K",
+            "Sannareddy A",
+            "Anderson LD Jr",
+            "Raza S",
+            "Dima D",
+            "Mikkilineni L",
+            "Anwer F",
+            "Kumar S",
+            "Usmani S",
+            "Huang CY",
+            "Mian H",
+            "Sidana S",
+            "Patel K",
+            "Martin T",
+            "Lin Y",
+            "Costa L",
+            "US Multiple Myeloma Immunotherapy Consortium"
+          ],
+          "url": "https://pubmed.ncbi.nlm.nih.gov/43024836/"
         },
         {
           "source": "PubMed",
@@ -53244,7 +53312,7 @@
           "volume": "9",
           "issue": "",
           "pages": "e2400546",
-          "type": "Journal Article",
+          "type": "Journal Article, Research Support, Non-U.S. Gov't",
           "authors": [
             "Hennessy MA",
             "Cimino-Mathews A",
@@ -56494,9 +56562,9 @@
           "year": 2026,
           "doi": "10.1111/ppe.70201",
           "journal": "Paediatric and perinatal epidemiology",
-          "volume": "",
-          "issue": "",
-          "pages": "",
+          "volume": "40",
+          "issue": "8",
+          "pages": "848-858",
           "type": "Journal Article",
           "authors": [
             "Wesselink AK",
@@ -57003,7 +57071,7 @@
       "orcid": "",
       "affiliation": "KPNC",
       "pubmed_query": "(Campbell CI[AU]) AND (\"Kaiser\"[AD])",
-      "pubmed_publication_count": 143,
+      "pubmed_publication_count": 144,
       "other_orcid_work_count": 0,
       "pubmed_publications": [
         {
@@ -57120,6 +57188,35 @@
             "Prochaska JJ"
           ],
           "url": "https://pubmed.ncbi.nlm.nih.gov/42966476/"
+        },
+        {
+          "source": "PubMed",
+          "match_type": "Author + KPNC match — review recommended",
+          "pmid": "43022298",
+          "put_code": "",
+          "title": "Modes of prenatal cannabis use and associations with anxiety, depression, and alcohol and nicotine use.",
+          "year": 2026,
+          "doi": "10.1016/j.abrep.2026.100761",
+          "journal": "Addictive behaviors reports",
+          "volume": "24",
+          "issue": "",
+          "pages": "100761",
+          "type": "Journal Article",
+          "authors": [
+            "Young-Wolff KC",
+            "Cortez CA",
+            "Nugent JR",
+            "Adams SR",
+            "Padon AA",
+            "Prochaska JJ",
+            "Does MB",
+            "Campbell CI",
+            "Soroosh AJ",
+            "Ansley D",
+            "Castellanos C",
+            "Brown QL"
+          ],
+          "url": "https://pubmed.ncbi.nlm.nih.gov/43022298/"
         },
         {
           "source": "PubMed",
@@ -61182,9 +61279,78 @@
       "orcid": "",
       "affiliation": "USC",
       "pubmed_query": "(Hayes-Larson E[AU]) AND (\"Southern California\"[AD] OR \"Los Angeles\"[AD] OR \"UCLA\"[AD])",
-      "pubmed_publication_count": 59,
+      "pubmed_publication_count": 62,
       "other_orcid_work_count": 0,
       "pubmed_publications": [
+        {
+          "source": "PubMed",
+          "match_type": "Author + USC match — review recommended",
+          "pmid": "43024216",
+          "put_code": "",
+          "title": "Guide to Extending Findings from Selected Samples Using Inverse Odds of Selection Weights.",
+          "year": 2027,
+          "doi": "10.1007/978-1-0716-5703-4_20",
+          "journal": "Methods in molecular biology (Clifton, N.J.)",
+          "volume": "3105",
+          "issue": "",
+          "pages": "371-389",
+          "type": "Journal Article",
+          "authors": [
+            "Hayes-Larson E"
+          ],
+          "url": "https://pubmed.ncbi.nlm.nih.gov/43024216/"
+        },
+        {
+          "source": "PubMed",
+          "match_type": "Author + USC match — review recommended",
+          "pmid": "43020849",
+          "put_code": "",
+          "title": "Understanding the exposome across the life course to promote healthy aging: consensus recommendations from the Gateway Exposome Coordinating Center.",
+          "year": 2026,
+          "doi": "10.1038/s43587-026-01212-0",
+          "journal": "Nature aging",
+          "volume": "6",
+          "issue": "11",
+          "pages": "2379-2392",
+          "type": "Consensus Statement, Journal Article",
+          "authors": [
+            "Lee J",
+            "Nichols E",
+            "Adar SD",
+            "Knapp D",
+            "Atshan S",
+            "Avendano M",
+            "Bindas A",
+            "Brauer M",
+            "Brook JR",
+            "Chang HH",
+            "Chiang YY",
+            "Choi H",
+            "Doiron D",
+            "Flood S",
+            "Fransz-Myers MM",
+            "Gross AL",
+            "Hayes-Larson E",
+            "Claus Henn B",
+            "Hicken M",
+            "Keller KP",
+            "Kezios KL",
+            "Kieny C",
+            "Lane KJ",
+            "Luben TJ",
+            "Meijer E",
+            "Narayanan S",
+            "Shih RA",
+            "Szpiro AA",
+            "Thorpe LE",
+            "Van Riper D",
+            "Weerman B",
+            "Weiss J",
+            "Wellenius GA",
+            "Weuve J"
+          ],
+          "url": "https://pubmed.ncbi.nlm.nih.gov/43020849/"
+        },
         {
           "source": "PubMed",
           "match_type": "Author + USC match — review recommended",
@@ -61401,6 +61567,32 @@
             "Zhang ZF"
           ],
           "url": "https://pubmed.ncbi.nlm.nih.gov/40875142/"
+        },
+        {
+          "source": "PubMed",
+          "match_type": "Author + USC match — review recommended",
+          "pmid": "43023584",
+          "put_code": "",
+          "title": "Convergent Geroscience: Integrating Social, Population, and Biological Aging Research to Healthy Aging.",
+          "year": 2026,
+          "doi": "10.1111/acel.70801",
+          "journal": "Aging cell",
+          "volume": "25",
+          "issue": "11",
+          "pages": "",
+          "type": "Journal Article, Review",
+          "authors": [
+            "Dutta N",
+            "Hayes-Larson E",
+            "Ansere VA",
+            "Garcia G",
+            "Crimmins EM",
+            "Curran SP",
+            "Benayoun BA",
+            "Ailshire JA",
+            "Higuchi-Sanabria R"
+          ],
+          "url": "https://pubmed.ncbi.nlm.nih.gov/43023584/"
         },
         {
           "source": "PubMed",
@@ -92412,7 +92604,7 @@
           "volume": "161",
           "issue": "",
           "pages": "31-38",
-          "type": "Journal Article",
+          "type": "Journal Article, Research Support, N.I.H., Extramural, Research Support, Non-U.S. Gov't",
           "authors": [
             "Shankar RP",
             "Saloner R",
@@ -92608,9 +92800,9 @@
           "year": 2026,
           "doi": "10.1038/s41591-026-04648-4",
           "journal": "Nature medicine",
-          "volume": "",
-          "issue": "",
-          "pages": "",
+          "volume": "32",
+          "issue": "11",
+          "pages": "4244-4255",
           "type": "Journal Article",
           "authors": [
             "Wood Alexander M",
@@ -96613,9 +96805,32 @@
       "orcid": "",
       "affiliation": "BU",
       "pubmed_query": "(\"Shiba, Koichiro\"[FAU]) AND (\"Boston University\"[AD] OR \"Boston Medical Center\"[AD] OR \"Harvard\"[AD] OR \"Brigham\"[AD] OR \"Massachusetts General\"[AD])",
-      "pubmed_publication_count": 95,
+      "pubmed_publication_count": 96,
       "other_orcid_work_count": 0,
       "pubmed_publications": [
+        {
+          "source": "PubMed",
+          "match_type": "Author + BU match — review recommended",
+          "pmid": "43009069",
+          "put_code": "",
+          "title": "Three-year participation patterns and metabolic syndrome-related indicators in a nudge- and gamification-based workplace health promotion program in Japan.",
+          "year": 2026,
+          "doi": "10.1016/j.ypmed.2026.108697",
+          "journal": "Preventive medicine",
+          "volume": "215",
+          "issue": "",
+          "pages": "108697",
+          "type": "Journal Article",
+          "authors": [
+            "Nagata H",
+            "Kondo N",
+            "Haseda M",
+            "Shiba K",
+            "Takeda S",
+            "Sato K"
+          ],
+          "url": "https://pubmed.ncbi.nlm.nih.gov/43009069/"
+        },
         {
           "source": "PubMed",
           "match_type": "Author + BU match — review recommended",
@@ -98964,7 +99179,7 @@
       "orcid": "",
       "affiliation": "UCSF",
       "pubmed_query": "(Yaffe K[AU]) AND (\"San Francisco\"[AD] OR \"UCSF\"[AD])",
-      "pubmed_publication_count": 793,
+      "pubmed_publication_count": 794,
       "other_orcid_work_count": 0,
       "pubmed_publications": [
         {
@@ -99191,6 +99406,35 @@
             "Yaffe K"
           ],
           "url": "https://pubmed.ncbi.nlm.nih.gov/42695174/"
+        },
+        {
+          "source": "PubMed",
+          "match_type": "Author + UCSF match — review recommended",
+          "pmid": "43020845",
+          "put_code": "",
+          "title": "Social determinants of health and the exposome shape aging and dementia across global populations.",
+          "year": 2026,
+          "doi": "10.1038/s43587-026-01246-4",
+          "journal": "Nature aging",
+          "volume": "6",
+          "issue": "11",
+          "pages": "2315-2336",
+          "type": "Journal Article, Review",
+          "authors": [
+            "Migeot J",
+            "Vilor-Tejedor N",
+            "Fittipaldi S",
+            "Evans TE",
+            "Crimmins EM",
+            "Wen O",
+            "Navarro A",
+            "Geronimus AT",
+            "Moffitt TE",
+            "Brayne C",
+            "Yaffe K",
+            "Ibanez A"
+          ],
+          "url": "https://pubmed.ncbi.nlm.nih.gov/43020845/"
         },
         {
           "source": "PubMed",
@@ -99687,7 +99931,7 @@
           "volume": "22",
           "issue": "4",
           "pages": "",
-          "type": "Journal Article",
+          "type": "Journal Article, Research Support, N.I.H., Intramural",
           "authors": [
             "Kang S",
             "Ebbels T",
@@ -103532,7 +103776,7 @@
           "volume": "103",
           "issue": "10",
           "pages": "e209988",
-          "type": "Journal Article",
+          "type": "Journal Article, Research Support, N.I.H., Extramural",
           "authors": [
             "Cavaillès C",
             "Dintica C",
@@ -123824,7 +124068,7 @@
       "orcid": "",
       "affiliation": "BU",
       "pubmed_query": "(Glymour MM[AU]) AND (\"Boston University\"[AD] OR \"Boston Medical Center\"[AD] OR \"San Francisco\"[AD] OR \"UCSF\"[AD] OR \"Harvard\"[AD] OR \"Brigham\"[AD] OR \"Massachusetts General\"[AD])",
-      "pubmed_publication_count": 459,
+      "pubmed_publication_count": 460,
       "other_orcid_work_count": 0,
       "pubmed_publications": [
         {
@@ -123856,6 +124100,28 @@
             "Torgerson D"
           ],
           "url": "https://pubmed.ncbi.nlm.nih.gov/42012827/"
+        },
+        {
+          "source": "PubMed",
+          "match_type": "Author + BU match — review recommended",
+          "pmid": "43020843",
+          "put_code": "",
+          "title": "Understanding the social determinants of healthy aging across the lifecourse with social policy experiments.",
+          "year": 2026,
+          "doi": "10.1038/s43587-026-01228-6",
+          "journal": "Nature aging",
+          "volume": "6",
+          "issue": "11",
+          "pages": "2306-2314",
+          "type": "Journal Article, Review",
+          "authors": [
+            "Avendano M",
+            "Kieny C",
+            "Berkman LF",
+            "Maurer J",
+            "Glymour MM"
+          ],
+          "url": "https://pubmed.ncbi.nlm.nih.gov/43020843/"
         },
         {
           "source": "PubMed",
@@ -124524,7 +124790,7 @@
           "volume": "16",
           "issue": "1",
           "pages": "",
-          "type": "Journal Article",
+          "type": "Journal Article, Research Support, N.I.H., Extramural",
           "authors": [
             "Posis AIB",
             "Chen R",
@@ -136301,7 +136567,7 @@
       "orcid": "",
       "affiliation": "UCSF",
       "pubmed_query": "(Thoma ME[AU]) AND (\"San Francisco\"[AD] OR \"UCSF\"[AD] OR \"University of Maryland\"[AD] OR \"College Park\"[AD])",
-      "pubmed_publication_count": 44,
+      "pubmed_publication_count": 45,
       "other_orcid_work_count": 0,
       "pubmed_publications": [
         {
@@ -136349,6 +136615,26 @@
             "Thoma ME"
           ],
           "url": "https://pubmed.ncbi.nlm.nih.gov/41524131/"
+        },
+        {
+          "source": "PubMed",
+          "match_type": "Author + UCSF match — review recommended",
+          "pmid": "43030113",
+          "put_code": "",
+          "title": "State Benefit Issuance Systems and Prenatal WIC Participation Trends During the COVID-19 Pandemic.",
+          "year": 2026,
+          "doi": "10.3390/nu18213484",
+          "journal": "Nutrients",
+          "volume": "18",
+          "issue": "21",
+          "pages": "",
+          "type": "Journal Article",
+          "authors": [
+            "Johnson JR",
+            "Hodges L",
+            "Thoma ME"
+          ],
+          "url": "https://pubmed.ncbi.nlm.nih.gov/43030113/"
         },
         {
           "source": "PubMed",
@@ -141282,7 +141568,7 @@
           "volume": "16",
           "issue": "1",
           "pages": "",
-          "type": "Journal Article",
+          "type": "Journal Article, Research Support, N.I.H., Extramural",
           "authors": [
             "Posis AIB",
             "Chen R",
@@ -161111,7 +161397,7 @@
       "orcid": "",
       "affiliation": "UCLA",
       "pubmed_query": "(Nianogo RA[AU]) AND (\"Los Angeles\"[AD] OR \"UCLA\"[AD])",
-      "pubmed_publication_count": 68,
+      "pubmed_publication_count": 69,
       "other_orcid_work_count": 0,
       "pubmed_publications": [
         {
@@ -161246,9 +161532,9 @@
           "year": 2026,
           "doi": "10.1111/ppe.70167",
           "journal": "Paediatric and perinatal epidemiology",
-          "volume": "",
-          "issue": "",
-          "pages": "",
+          "volume": "40",
+          "issue": "8",
+          "pages": "880-886",
           "type": "Journal Article",
           "authors": [
             "Chen L",
@@ -161360,6 +161646,47 @@
             "Tsugawa Y"
           ],
           "url": "https://pubmed.ncbi.nlm.nih.gov/42258826/"
+        },
+        {
+          "source": "PubMed",
+          "match_type": "Author + UCLA match — review recommended",
+          "pmid": "43018473",
+          "put_code": "",
+          "title": "Environmental Tobacco Smoke and Gastric Cancer: Evidence from the Stomach Cancer Pooling (StoP) Project and a Comprehensive Meta-analysis.",
+          "year": 2026,
+          "doi": "10.1158/1055-9965.epi-26-0404",
+          "journal": "Cancer epidemiology, biomarkers & prevention : a publication of the American Association for Cancer Research, cosponsored by the American Society of Preventive Oncology",
+          "volume": "",
+          "issue": "",
+          "pages": "",
+          "type": "Journal Article",
+          "authors": [
+            "Wang Y",
+            "Mu L",
+            "Boccia S",
+            "Malekzadeh R",
+            "Hu J",
+            "Yu GP",
+            "Boffetta P",
+            "La Vecchia C",
+            "Camargo MC",
+            "Curado MP",
+            "Lunet N",
+            "Vioque J",
+            "Wu M",
+            "Zhao JK",
+            "Zhou JY",
+            "Hashibe M",
+            "Rao J",
+            "Nianogo RA",
+            "Crespi CM",
+            "Negri E",
+            "Pelucchi C",
+            "Pakseresht M",
+            "Pastorino R",
+            "Zhang ZF"
+          ],
+          "url": "https://pubmed.ncbi.nlm.nih.gov/43018473/"
         },
         {
           "source": "PubMed",
@@ -162956,7 +163283,7 @@
           "volume": "16",
           "issue": "1",
           "pages": "",
-          "type": "Journal Article",
+          "type": "Journal Article, Research Support, N.I.H., Extramural",
           "authors": [
             "Posis AIB",
             "Chen R",
@@ -169189,7 +169516,7 @@
       "orcid": "",
       "affiliation": "UCSF",
       "pubmed_query": "(Martinez SM[AU] OR \"Martinez, Suzanna\"[FAU]) AND (\"San Francisco\"[AD] OR \"UCSF\"[AD])",
-      "pubmed_publication_count": 44,
+      "pubmed_publication_count": 45,
       "other_orcid_work_count": 0,
       "pubmed_publications": [
         {
@@ -169261,6 +169588,29 @@
             "Pasch LA"
           ],
           "url": "https://pubmed.ncbi.nlm.nih.gov/42835663/"
+        },
+        {
+          "source": "PubMed",
+          "match_type": "Author + UCSF match — review recommended",
+          "pmid": "43025605",
+          "put_code": "",
+          "title": "A scoping review of food insecurity in U.S. higher education by state's congressional delegation majority.",
+          "year": 2026,
+          "doi": "10.1016/j.advnut.2026.100771",
+          "journal": "Advances in nutrition (Bethesda, Md.)",
+          "volume": "",
+          "issue": "",
+          "pages": "100771",
+          "type": "Journal Article, Review",
+          "authors": [
+            "Martinez SM",
+            "Chodur G",
+            "Singh S",
+            "Esaryk E",
+            "Nystrom C",
+            "Nazmi A"
+          ],
+          "url": "https://pubmed.ncbi.nlm.nih.gov/43025605/"
         },
         {
           "source": "PubMed",
